@@ -82,7 +82,7 @@ model = Sequential([
 
 model.compile(optimizer='adam',
               loss="binary_crossentropy",
-              metrics=['binary_accuracy'])
+              metrics=['acc'])
 
 model.summary()
 
