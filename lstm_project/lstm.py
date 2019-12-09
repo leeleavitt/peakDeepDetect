@@ -67,6 +67,9 @@ test = test.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 # 2 # of features (2 mean and Standar Deviation)
 # 3 # of timesteps
 
+#This Helps to guide the model and loss
+#https://machinelearningmastery.com/how-to-choose-loss-functions-when-training-deep-learning-neural-networks/
+
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
@@ -74,17 +77,18 @@ from tensorflow.keras.layers import LSTM
 
 model = Sequential([
     tf.keras.layers.LSTM(1, input_shape = traces.shape[-2:]),
-    tf.keras.layers.Dense(1)
+    tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
-model.compile(optimizer='adam',
-              loss='binary_crossentropy',
+model.compile(optimizer='rmsprop',
+              loss="binary_crossentropy",
               metrics=['Accuracy'])
 
 model.summary()
 
 EVALUATION_INTERVAL = 200
 EPOCHS = 10
+
 history = model.fit(train, epochs = EPOCHS, 
                     steps_per_epoch=EVALUATION_INTERVAL,
                     validation_data = test,
