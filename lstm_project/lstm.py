@@ -6,6 +6,48 @@ import seaborn as sns
 import matplotlib.style as stl 
 stl.use('seaborn')
 from sklearn.model_selection import train_test_split
+import os
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
+
+
+
+# Function to plot the Loss and Histories
+def plot_train_history(history, title):
+  loss = history.history['loss']
+  val_loss = history.history['val_loss']
+  epochs = range(len(loss))
+  
+  #Loss Plotter
+  fig, axs = plt.subplots(2)
+  fig.suptitle(title)
+  axs[0].plot(epochs, loss, 'b', label='Training loss')
+  axs[0].plot(epochs, val_loss, 'r', label='Validation loss')
+  axs[0].set_title('Loss')
+  axs[0].legend()
+
+  trainAcc = history.history['acc']
+  valAcc = history.history['val_acc']
+
+  axs[1].plot(epochs, trainAcc, 'b', label='Training Accuracy')
+  axs[1].plot(epochs, valAcc, 'r', label='Validation Accuracy')
+  axs[1].set_title('Accuracy')
+  axs[1].legend()
+
+  fig.show()
+
+  fig.savefig(title+'.png', bbox_inches='tight')
+
+#This is where we will be doing our work.
+main_dir  = os.getcwd()
+
+os.chdir('./data_in_csv')
+expDirs  = next(os.walk('.'))[1]
+
+for i in range(len(expDirs)):
+    
 
 ######################################################################
 #First import the K.40mM 
@@ -70,10 +112,6 @@ test = test.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 #This Helps to guide the model and loss
 #https://machinelearningmastery.com/how-to-choose-loss-functions-when-training-deep-learning-neural-networks/
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import LSTM
-
 
 model = Sequential([
     tf.keras.layers.LSTM(100, input_shape = traces.shape[-2:]),
@@ -97,4 +135,28 @@ history = model.fit(train, epochs = EPOCHS,
 history = model.fit(x_train, y_train, epochs=25, 
                     validation_data=(x_test,y_test ))
 
-                    
+print("This is the loss vs Accuracy for" + )
+plot_train_history(history, "LSTM Experiment 1")     
+
+##########################################################
+#Now that we have a model that works fairly well 
+#lets do some data analysis
+
+#These are Predicted Values
+labsPred = model.predict_classes(traces)
+labsPred = pd.DataFrame(labsPred) #convert to df
+
+#convert real to DataFrame
+labs = pd.DataFrame(labels)
+
+realTest = pd.concat([labs, labsPred], axis=1)
+
+realTest.columns = ['Real', "Predicted"]
+
+realTest = realTest.set_index(tracesIndex)
+
+realTest.to_csv('lstm.experiment1_labcomp.csv')
+
+#These are Predicted Values
+realVsPredCT = pd.crosstab(np.asarray(labsPred).flatten(), np.asarray(labs).flatten(), rownames=['pred'], colnames=['real'])
+
