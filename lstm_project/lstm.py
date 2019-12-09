@@ -76,13 +76,13 @@ from tensorflow.keras.layers import LSTM
 
 
 model = Sequential([
-    tf.keras.layers.LSTM(1, input_shape = traces.shape[-2:]),
+    tf.keras.layers.LSTM(100, input_shape = traces.shape[-2:]),
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
-model.compile(optimizer='rmsprop',
+model.compile(optimizer='adam',
               loss="binary_crossentropy",
-              metrics=['Accuracy'])
+              metrics=['binary_accuracy'])
 
 model.summary()
 
