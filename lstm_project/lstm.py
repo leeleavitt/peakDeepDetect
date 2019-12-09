@@ -5,22 +5,56 @@ import matplotlib.pyplot as plt
 import seaborn as sns 
 import matplotlib.style as stl 
 stl.use('seaborn')
-
 from sklearn.model_selection import train_test_split
 
+######################################################################
 #First import the K.40mM 
 traces = pd.read_csv("./data_in_csv/K.40mM/traces.csv", index_col=0)
 #some examples have na values get rid of
 traces = traces.dropna()
+tracesIndex = traces.index
+#Randomize!!
+tracesIndex = tracesIndex[np.random.permutation(len(tracesIndex))]
+traces = traces.loc[tracesIndex,]
+#This need to be a 3 dimensional numpy array
+traces = np.asarray(traces)
+#Add the new Dimension
+traces = traces[...,np.newaxis]
 
 #Load the Labels
 labels = pd.read_csv("./data_in_csv/K.40mM/labels.csv", index_col=0)
-labels = labels.loc[traces.index,]
+#Load lables that match the traces above
+labels = labels.loc[tracesIndex,]
+#Convert to Category
 labels = labels.iloc[:,0].astype('category')
+#convert to np array
+labels = np.asarray(labels)
 
-X_train, X_test, y_train, y_test = train_test_split(traces, labels, test_size=0.33)
+#Create Train and Validation Set
+val = int(np.ceil(traces.shape[0]*.33))
+trainSize = traces.shape[0] - val 
 
-#Using thi as a guide
+x_train  = traces[:trainSize,...]
+y_train = labels[:trainSize]
+
+x_test = traces[trainSize:,...]
+y_test = labels[trainSize:]
+
+# Now DO what we need 
+BATCH_SIZE = 256
+BUFFER_SIZE = 10000
+train = tf.data.Dataset.from_tensor_slices((traces, labels))
+train = train.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
+
+test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+test = test.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
+
+
+
+#This Doesn't work for 3 dimension datasets
+#X_train, X_test, y_train, y_test = train_test_split(traces, labels, test_size=0.33)
+
+#Using this as a guide
 #https://machinelearningmastery.com/reshape-input-data-long-short-term-memory-networks-keras/
 
 # Function to transform data set into 10 peices of 
@@ -33,33 +67,15 @@ X_train, X_test, y_train, y_test = train_test_split(traces, labels, test_size=0.
 # 2 # of features (2 mean and Standar Deviation)
 # 3 # of timesteps
 
-
-
-
-
-
-
-
-
-
-
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 
 
-model = Sequential()
-model.add(LSTM(1,input_shape=(120,1)))
-
-
-
-
-
-
-# model = Sequential([
-#     tf.keras.layers.Flatten(input_shape = X_train.iloc[0].shape),
-#     tf.keras.layers.LSTM(1),
-# ])
+model = Sequential([
+    tf.keras.layers.LSTM(1, input_shape = traces.shape[-2:]),
+    tf.keras.layers.Dense(1)
+])
 
 model.compile(optimizer='adam',
               loss='binary_crossentropy',
@@ -67,7 +83,14 @@ model.compile(optimizer='adam',
 
 model.summary()
 
-history = model.fit(X_train, y_train, epochs=25, 
-                    validation_data=(X_test,y_test ))
+EVALUATION_INTERVAL = 200
+EPOCHS = 10
+history = model.fit(train, epochs = EPOCHS, 
+                    steps_per_epoch=EVALUATION_INTERVAL,
+                    validation_data = test,
+                    validation_steps=50)
+
+history = model.fit(x_train, y_train, epochs=25, 
+                    validation_data=(x_test,y_test ))
 
                     
