@@ -12,6 +12,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
 
 # Function to plot the Loss and Histories
 def plot_train_history(history, title):
@@ -90,7 +93,7 @@ for i in range(len(expDirs)):
     # Now DO what we need for the import to LSTM
     BATCH_SIZE = 256
     BUFFER_SIZE = 10000
-    train = tf.data.Dataset.from_tensor_slices((traces, labels))
+    train = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     train = train.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 
     test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
@@ -125,19 +128,22 @@ for i in range(len(expDirs)):
 
     model.summary()
 
-    EVALUATION_INTERVAL = 200
-    EPOCHS = 10
+    EVALUATION_INTERVAL = 500
+    EPOCHS = 50
 
     history = model.fit(train, epochs = EPOCHS, 
                         steps_per_epoch=EVALUATION_INTERVAL,
                         validation_data = test,
                         validation_steps=50)
 
-    history = model.fit(x_train, y_train, epochs=25, 
-                        validation_data=(x_test,y_test ))
+    # history = model.fit(x_train, y_train, epochs=25, 
+    #                     validation_data=(x_test,y_test ))
 
     print("This is the loss vs Accuracy for" + expDirs[i])
-    plot_train_history(history, "lstm.experiment1")     
+    plot_train_history(history, expDirs[i]+"_lstm.experiment1")     
+    
+    #Save the ModelYYYYYYYYYYY
+    model.save(expDirs[i]+'exp1.h5')
 
     ##########################################################
     #Now that we have a model that works fairly well 
@@ -162,6 +168,8 @@ for i in range(len(expDirs)):
     realVsPredCT = pd.crosstab(np.asarray(labsPred).flatten(), np.asarray(labs).flatten(), rownames=['pred'], colnames=['real'])
     
     print(realVsPredCT)
+
+    del model
 
     os.chdir(main_dir)
 
