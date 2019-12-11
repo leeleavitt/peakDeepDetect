@@ -35,7 +35,7 @@ for(i in 1:length(expDirs)){
     setwd(expDirs[i])
 
     labsOrig <- read.csv('labels.csv', row.names=1) # original labels
-    labsComp <- read.csv('lstm.experiment1_labcomp.csv', row.names=1) # Labels from predictive model
+    labsComp <- read.csv('lstm.experiment2_labcomp.csv', row.names=1) # Labels from predictive model
     traces <- read.csv('traces.csv', row.names=1) # Traces
 
     #Proof they are the same
@@ -57,9 +57,9 @@ for(i in 1:length(expDirs)){
     oneNames <- row.names(misMatched[logicOnes,])
 
     #Plot the zeros as Ones
-    gridPlotter(traces, zeroNames, 'lstmExp1ZerosAsOnes')
+    gridPlotter(traces, zeroNames, 'lstmExp2ZerosAsOnes')
     #Plot the Ones as Zeros
-    gridPlotter(traces, oneNames, 'lstmExp1OneAsZeros')
+    gridPlotter(traces, oneNames, 'lstmExp2OneAsZeros')
 
 }
 
