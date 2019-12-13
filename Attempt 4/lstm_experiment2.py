@@ -81,9 +81,9 @@ stl.use('seaborn')
 from sklearn.model_selection import train_test_split
 import os
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import LSTM
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense
+# from tensorflow.keras.layers import LSTM
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
